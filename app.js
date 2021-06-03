@@ -10,7 +10,7 @@ app.use(bodyParser.json());
 
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
-app.set('port', 4501);
+app.set('port', 4502);
 
 app.use(express.static(__dirname+ '/public'));
 
@@ -19,7 +19,7 @@ var pool = mysql.createPool({
   connectionLimit : 10,
   host            : 'classmysql.engr.oregonstate.edu',
   user            : 'cs290_haneyad',
-  password        : '7073',
+  password        : 'PussyEater898!',
   database        : 'cs290_haneyad'
 });
 
@@ -48,6 +48,19 @@ app.get('/reset-table',function(req,res,next){
         res.render('reset',context);
       })
     }
+  });
+});
+
+app.get('/insert',function(req,res,next){
+  var context = {};
+  mysql.pool.query("INSERT INTO workouts (name, reps, weight, date, lbs) VALUES ('adam', 2, 50, '2017-06-16', True)", function(err, result){
+    if (err) {
+      next(err);
+      console.log("MYSQL INSERT ERROR");
+      return;
+    }
+    context.results = "Inserted id " + result.insertId;
+    res.render('home',context);
   });
 });
 
