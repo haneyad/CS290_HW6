@@ -1,0 +1,19 @@
+<h1>GET Request Received</h1>
+
+<table>
+<caption> URL Parameter Table </caption>
+	<thead>
+	<tr>
+		<th>Parameter</th>
+		<th>Value</th>
+	</tr>
+	</thead>
+	<tbody>
+	{{#each dataList}}
+		<tr>
+			<td>{{this.parameter}}</td>
+			<td>{{this.value}}</td>
+		</tr>
+	{{/each}}
+	</tbody>
+</table>
