@@ -2,7 +2,7 @@
 <div>
     Enter Das Workout Data:
 </div>
-<form id="addEntry" method="post">
+<form id="addEntryForm" method="post">
     <table id="inputTable">
         <thead>
             <tr>
@@ -28,10 +28,10 @@
                     <input type="date" name="date" required/>
                 </td>
                 <td>
-                    <input type="text" name="unit" required/>
+                    <input type="text" name="lbs" required/>
                 </td>
                 <td>
-                    <input type="submit" id="submit" value="Insert">
+                    <button type="button" id="submit">Add</button>
                 </td>
             </tr>
         </tbody>
@@ -59,6 +59,12 @@
             <td>{{this.weight}}</td>
             <td>{{this.date}}</td>
             <td>{{this.lbs}}</td>
+            <td>
+                <button type="button" class="edit" id='btnEdit{{this.id}}'>Edit</button>
+            </td>
+            <td>
+                <button type="button" class="delete" id='btnDelete{{this.id}}'>Delete</button>
+            </td>
         </tr>
         {{/each}}
     </tbody>

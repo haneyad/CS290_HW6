@@ -5,11 +5,18 @@ var express = require('express');
 var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var cors = require('cors');
-var fetch = require('fetch');
+
+var multer = require('multer');
+var upload = multer();
+
 var bodyParser = require('body-parser');
 const { equal } = require('assert');
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true}));
+app.use(upload.array());
+app.use(express.static('public'));
+
 app.use(cors());
 app.options('*', cors());
 
@@ -44,6 +51,7 @@ app.get('/',function(req,res,next){
     }
     context.dataList = rows;
     res.render('index', context);
+    console.log(context);
   });
 });
 
@@ -52,7 +60,7 @@ app.get('/',function(req,res,next){
 // Sends new row data to SQL
 app.post('/', function(req,res){
   var context = {};
-  
+
   // Extract the values of the query from the req.body
   var inputList = [];
   for (let q in req.body) {
@@ -86,8 +94,9 @@ app.post('/', function(req,res){
       console.log(err);
       return;
     };
-  });
     console.log("ADD VIA TABLE INSERT SUCCESS");
+  });
+    res.end();
 });
 
 
@@ -136,16 +145,15 @@ app.get('/insert',function(req,res,next){
 
 app.get('/select', function(req,res,next){
   var context = {};
-  pool.query('SELECT * FROM workouts', function(err, rows, fields){
+  pool.query('SELECT * FROM workouts ORDER BY id DESC LIMIT 1', function(err, rows, fields){
     if(err){
       next(err);
       res.render('error')
       console.log("ERROR: SELECT");
       return;
     }
-    context.results = JSON.stringify(rows);
-    res.json(context);
-    console.log("SELECT: SUCCESS");
+    res.json(rows);
+    console.log("SELECT: SUCCESS")
   });
 });
 
