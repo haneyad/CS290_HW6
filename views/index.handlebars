@@ -1,5 +1,46 @@
 <H1>Workout Tracker</H1>
+<div>
+    Enter Das Workout Data:
+</div>
+<form id="addEntry" method="post">
+    <table id="inputTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Reps</th>
+                <th>Weight</th>
+                <th>Date</th>
+                <th>Unit</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <input type="text" name="name" required />
+                </td>
+                <td>
+                    <input type="text" name="reps" required />
+                </td>
+                <td>
+                    <input type="text" name="weight" required/>
+                </td>
+                <td>
+                    <input type="date" name="date" required/>
+                </td>
+                <td>
+                    <input type="text" name="unit" required/>
+                </td>
+                <td>
+                    <input type="submit" id="submit" value="Insert">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</form>
 
+<div>
+    Das Workouts Summary:
+</div>
 <table id="workoutTable">
     <thead>
         <tr>
@@ -10,8 +51,17 @@
             <th>Unit</th>
         </tr>
     </thead>
-    <tbody>
-
+    <tbody id='tableBody'>
+        {{#each dataList}}
+        <tr>
+            <td>{{this.name}}</td>
+            <td>{{this.reps}}</td>
+            <td>{{this.weight}}</td>
+            <td>{{this.date}}</td>
+            <td>{{this.lbs}}</td>
+        </tr>
+        {{/each}}
     </tbody>
+</table>
 <br>
-<script src="/scripts/index.js"></script>
+<script src='/scripts/index.js'></script>

@@ -1,12 +1,17 @@
+
+// Boilerplate to Setup
 var express = require('express');
 
 var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
-
+var cors = require('cors');
+var fetch = require('fetch');
 var bodyParser = require('body-parser');
 const { equal } = require('assert');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cors());
+app.options('*', cors());
 
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
@@ -25,16 +30,78 @@ var pool = mysql.createPool({
 
 module.exports.pool = pool;
 
-app.get('/', function(req,res){
-  res.render('index');
+
+// Default GET request
+// Runs SELECT on database
+app.get('/',function(req,res,next){
+  var context = {};
+  pool.query('SELECT * FROM workouts', function(err, rows, fields){
+    if(err){
+      next(err);
+      res.render('error')
+      console.log("ERROR: SELECT");
+      return;
+    }
+    context.dataList = rows;
+    res.render('index', context);
+  });
 });
 
+
+// Default POST request
+// Sends new row data to SQL
+app.post('/', function(req,res){
+  var context = {};
+  
+  // Extract the values of the query from the req.body
+  var inputList = [];
+  for (let q in req.body) {
+    inputList.push(req.body[q]);
+  }
+
+  // Convert strings to int where required
+  var tempConvert = Number(inputList[1]);
+  if (tempConvert === NaN) {
+    alert("You entered an invalid number for Reps.")
+  }
+  inputList[1] = tempConvert;
+  tempConvert = Number(inputList[2]);
+  if (tempConvert === NaN) {
+    alert("You entered an invalid number for Weight")
+  }
+  inputList[2] = tempConvert;
+
+  // groom lbs for TRUE / FALSE
+  tempConvert = inputList[4].toLowerCase();
+  if (tempConvert == 'true'){
+    inputList[4] = 1;
+  } else {
+    inputList[4] = 0;
+  }
+
+  // Attempt to make insert query
+  pool.query("INSERT INTO workouts (name, reps, weight, date, lbs) VALUES (?,?,?,?,?)", inputList, function(err, result){
+    if(err){
+      res.render('error');
+      console.log(err);
+      return;
+    };
+  });
+    console.log("ADD VIA TABLE INSERT SUCCESS");
+});
+
+
+app.delete('/', function(req,res){
+
+})
+
+// RESETS Database 
 app.get('/reset-table',function(req,res,next){
   var context = {};
   pool.query("DROP TABLE IF EXISTS workouts", function(err){ //replace your connection pool with the your variable containing the connection pool
     if (err) {
       console.log ("reset table: mysql error");
-      res.render('index');
+      res.render('error');
     } else {
       var createString = "CREATE TABLE workouts("+
       "id INT PRIMARY KEY AUTO_INCREMENT,"+
@@ -45,22 +112,40 @@ app.get('/reset-table',function(req,res,next){
       "lbs BOOLEAN)";
       pool.query(createString, function(err){
         context.results = "Table reset";
-        res.render('reset',context);
+        res.render('reset',{context: context, contextExists: true});
       })
     }
   });
 });
 
+// URL for populating table with TEST INSERTS
 app.get('/insert',function(req,res,next){
   var context = {};
-  mysql.pool.query("INSERT INTO workouts (name, reps, weight, date, lbs) VALUES ('adam', 2, 50, '2017-06-16', True)", function(err, result){
+  pool.query("INSERT INTO workouts (name, reps, weight, date, lbs) VALUES ('billy', 2, 50, '2021-05-04', 1)", function(err, result){
     if (err) {
       next(err);
+      res.render('error');
       console.log("MYSQL INSERT ERROR");
       return;
     }
     context.results = "Inserted id " + result.insertId;
-    res.render('home',context);
+    res.render('index', {context: context, contextExists: true});
+    console.log("URL /INSERT: SUCCESS");
+  });
+});
+
+app.get('/select', function(req,res,next){
+  var context = {};
+  pool.query('SELECT * FROM workouts', function(err, rows, fields){
+    if(err){
+      next(err);
+      res.render('error')
+      console.log("ERROR: SELECT");
+      return;
+    }
+    context.results = JSON.stringify(rows);
+    res.json(context);
+    console.log("SELECT: SUCCESS");
   });
 });
 
@@ -87,8 +172,8 @@ app.get('/insert',function(req,res,next){
     bodyData: bodyData
   });
 });
-
-app.get('/', function(req,res){
+*/
+/*app.get('/', function(req,res){
 	let params = [];
   for (let p in req.query){
     params.push({'parameter':p, 'value':req.query[p]});
@@ -116,3 +201,11 @@ app.use(function(err, req, res, next){
 app.listen(app.get('port'), function(){
   console.log('Express started on http://localhost:' + app.get('port') + '; press Ctrl-C to terminate.');
 });
+
+function convertToHtml(object) {
+  let ctr = 0;
+  let htmlString = '';
+  for (ctr= 0; ctr < object.length; ctr++){
+    htmlString = object[ctr].name
+  }
+}
