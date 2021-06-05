@@ -51,7 +51,6 @@ app.get('/',function(req,res,next){
     }
     context.dataList = rows;
     res.render('index', context);
-    console.log(context);
   });
 });
 
@@ -95,16 +94,14 @@ app.post('/', function(req,res){
       return;
     };
     console.log("ADD VIA TABLE INSERT SUCCESS");
-  });
+    console.log(inputList);
     res.end();
+  });
 });
 
 
-app.delete('/', function(req,res){
-
-})
-
 // RESETS Database 
+//
 app.get('/reset-table',function(req,res,next){
   var context = {};
   pool.query("DROP TABLE IF EXISTS workouts", function(err){ //replace your connection pool with the your variable containing the connection pool
@@ -127,7 +124,9 @@ app.get('/reset-table',function(req,res,next){
   });
 });
 
+
 // URL for populating table with TEST INSERTS
+//
 app.get('/insert',function(req,res,next){
   var context = {};
   pool.query("INSERT INTO workouts (name, reps, weight, date, lbs) VALUES ('billy', 2, 50, '2021-05-04', 1)", function(err, result){
@@ -143,7 +142,10 @@ app.get('/insert',function(req,res,next){
   });
 });
 
-app.get('/select', function(req,res,next){
+
+// SELECTS LAST ROW from Mysql after INSERT via POST request
+//
+app.get('/selectOnAdd', function(req,res,next){
   var context = {};
   pool.query('SELECT * FROM workouts ORDER BY id DESC LIMIT 1', function(err, rows, fields){
     if(err){
@@ -157,42 +159,36 @@ app.get('/select', function(req,res,next){
   });
 });
 
-/*app.post('/', function(req,res){
-  let urlParams = [];
-  for (let p in req.query){
-    urlParams.push({'parameter':p, 'value':req.query[p]})
-  }
 
-  let urlData = {};
-  urlData.urlList = urlParams;
+// DELETES MySql Entry
+//
+app.post('/delete', function(req, res){
+  console.log("REQUEST BODY: ", typeof(req.body));
+  // Request body is application/x-www-form-urlencoded encoded
+  // Results in key-value pairs
+  let idKey = req.body['id'];
+  queryStr = "DELETE FROM workouts WHERE id=" + idKey;
 
-  let bodyParams = [];
-  for (let q in req.body){
-    bodyParams.push({'parameter':q, 'value':req.body[q]})
-  }
-  console.log(bodyParams);
-  console.log(req.body);
-  let bodyData = {};
-  bodyData.bodyList = bodyParams;
-
-  res.render('index-post', {
-    urlData : urlData,
-    bodyData: bodyData
-  });
+  pool.query(queryStr, function(err) {
+    if(err){
+      console.log("App.Post DELETE error");
+      res.render('error');
+      return
+    }
+    res.end();
+    console.log("DELETE SUCCESS");
+  })
 });
-*/
-/*app.get('/', function(req,res){
-	let params = [];
-  for (let p in req.query){
-    params.push({'parameter':p, 'value':req.query[p]});
-  }
-  
-  let data = {};
-  data.dataList = params;
-  res.render('index-get', data);
-});
-*/
 
+
+// EDIT page for updating table entry
+//
+app.get('/edit', function(req, res){
+  res.render('/edit');
+});
+
+
+// BOILERPLATE FOR STATUS CODES AND OPENING PORT
 
 app.use(function(req,res){
   res.status(404);

@@ -1,7 +1,7 @@
 
 function postData(){
     var xhr = new XMLHttpRequest();
-    
+    xhr.timeout = 2000;
     // Target correct form
     var form = document.getElementById("addEntryForm");
 
@@ -10,7 +10,7 @@ function postData(){
 
     // Once response has finished, callback 
     xhr.onload = function (){
-        displayData();
+        displayDataOnAdd();
     };
 
     // On error callback
@@ -19,15 +19,21 @@ function postData(){
     };
 
     // parameterize request
-    xhr.open("POST", "http://localhost:4502/", true);
+    xhr.open("POST", "/", true);
 
     // send request
     xhr.send(fd);
+
+    // on timeout
+    xhr.ontimeout = function() {
+        alert("POST ADD DATA TIMED OUT");
+    }
 }
 
-function displayData(){
+
+function displayDataOnAdd(){
     let xhr = new XMLHttpRequest();
-    let url= '/select';
+    let url= '/selectOnAdd';
     xhr.timeout = 5000;
     xhr.responseType = 'json';
 
@@ -36,12 +42,6 @@ function displayData(){
         if (xhr.status != 200) {
             console.log(xhr.statusText);
         } else {
-            console.log(xhr.status);
-            console.log("XHR RESPONSE: ", xhr.reponse);
-            console.log("XHR Status ", xhr.readyState)
-
-            console.log("Response type: ", xhr.responseType);
-            console.log("Response object: ", xhr.response);
             
             let lastEntry = xhr.response[0];
 
@@ -55,9 +55,8 @@ function displayData(){
             // Properly format returned string to Date
             let date = new Date(addedData[4]);
             addedData[4] = date;
-            console.log(addedData);
 
-            // Create a new row and append to tableBody
+            // Create a new row and append to tableBody 
             let tableObject = document.getElementById('tableBody');
             let insertRow = document.createElement('tr');
             tableObject.appendChild(insertRow);
@@ -65,6 +64,9 @@ function displayData(){
             // Get last row after insert of a new "empty" row
             let allRows = tableObject.getElementsByTagName('tr');
             let lastRow = allRows[allRows.length - 1];
+
+            // Give unique ID to NEW last row
+            lastRow.id = 'row_' + addedData[0];
 
             // Interate over elements in the data added by POST to
             // create cells with values 
@@ -80,14 +82,20 @@ function displayData(){
             
             for (let i = rows.length-1; i < rows.length; i++) {
                 var btn = document.createElement("td");
-                var tempStr = "<input type='button' class='edit' value='edit' id=" + 'btnEdit' + (i+1) + ' />'; 
+                var tempStr = "<input type='button' class='edit' value='edit' id=" + 'btnEdit_' + addedData[0] + ' />'; 
                 btn.innerHTML = tempStr;
                 rows[i].appendChild(btn);
+
+                //Add edit event listener to new button
+                document.getElementById('btnEdit_'+ addedData[0]).addEventListener("click", editData);
             
                 var btn1 = document.createElement("td");
-                tempStr = "<input type='button' class='delete' value='delete' id=" + 'btnDelete' + (i+1) + ' />';
+                tempStr = "<input type='button' class='delete' value='delete' id=" + 'btnDelete_' + addedData[0] + ' />';
                 btn1.innerHTML = tempStr;
                 rows[i].appendChild(btn1);
+
+                // Add delete event listener to new button
+                document.getElementById('btnDelete_' + addedData[0]).addEventListener("click", deleteData);
         };
     };
 }
@@ -109,15 +117,74 @@ function displayData(){
     };
 }
 
+
 function deleteData() {
     // this keyword exposes object associated with eventListener
+    let xhr = new XMLHttpRequest();
+    let url= '/delete';
+    xhr.timeout = 5000;
 
-    console.log("delete button clicked ", this.id);
+    xhr.onload = function(){
+        let deletedRow = document.getElementById('row_' + idNum);
+        deletedRow.remove();
+    }
+
+    // Parameterize DELETE request
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+    // Delete Btn unique key to delete from table
+    // THIS COULD COME FROM CODE AT BOTTOM THAT ADDS EVENT LISTENERS ON S/U
+    // OR COULD COME AFTER ADDING ROW
+    let idStr =  this.id;
+    let strArr = idStr.split('_');
+    
+    let idNum = Number(strArr[1]);
+    // Send DELETE request
+    xhr.send('id='+ idNum);
+
+    // Callback on timeout
+    xhr.ontimeout = function(){
+        console.log("XMLHttpRequest DELETE Timeout");
+    }
+
+    // Callback on error
+    xhr.onerror = function() {
+        console.log("DELETE: XMLHttpRequest error");
+    }
 }
 
+
 function editData() {
-    // this keyword exposes object associated with eventListener
-    console.log("edit button clicked", this.id);
+    let xhr = new XMLHttpRequest();
+    let url= '/edit';
+    xhr.timeout = 5000;
+    
+    // GET UNIQUE EDIT BTN ID TO CORRELATE WITH MySQL
+    let idStr =  this.id;
+    let strArr = idStr.split('_');
+    let idNum = Number(strArr[1]);
+
+    xhr.onload = function(){
+
+    }
+
+    // Parameterize DELETE request
+    xhr.open("GET", url, true);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+    // Send DELETE request
+    xhr.send(idNum);
+
+    // Callback on timeout
+    xhr.ontimeout = function(){
+        console.log("XMLHttpRequest EDIT Timeout");
+    }
+
+    // Callback on error
+    xhr.onerror = function() {
+        console.log("EDIT: XMLHttpRequest error");
+    }
 }
 
 
@@ -125,6 +192,8 @@ function editData() {
 // Call postData() when "Add" HTML button pressed
 document.getElementById("submit").addEventListener("click", postData);
 
+// ON NEW PAGE RENDER ONLY
+// Futher event listeners are handled in ADD and DELETE functions
 // Get collections of the buttons and place event listeners on them
 deleteBtnsCollect = document.getElementsByClassName("delete");
 
