@@ -183,8 +183,19 @@ app.post('/delete', function(req, res){
 
 // EDIT page for updating table entry
 //
-app.get('/edit', function(req, res){
-  res.render('/edit');
+app.post('/edit', function(req,res,next){
+  var context = {};
+  let idKey = req.body['id'];
+  pool.query('SELECT * FROM workouts WHERE id=' + idKey, function(err, rows, fields){
+    if(err){
+      next(err);
+      res.render('error')
+      console.log("ERROR: SELECT");
+      return;
+    }
+    res.json(rows);
+    console.log("SELECT: SUCCESS")
+  });
 });
 
 

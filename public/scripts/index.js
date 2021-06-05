@@ -87,7 +87,7 @@ function displayDataOnAdd(){
                 rows[i].appendChild(btn);
 
                 //Add edit event listener to new button
-                document.getElementById('btnEdit_'+ addedData[0]).addEventListener("click", editData);
+                document.getElementById('btnEdit_'+ addedData[0]).addEventListener("click", selectEditData);
             
                 var btn1 = document.createElement("td");
                 tempStr = "<input type='button' class='delete' value='delete' id=" + 'btnDelete_' + addedData[0] + ' />';
@@ -155,38 +155,73 @@ function deleteData() {
 }
 
 
-function editData() {
-    let xhr = new XMLHttpRequest();
-    let url= '/edit';
-    xhr.timeout = 5000;
-    
-    // GET UNIQUE EDIT BTN ID TO CORRELATE WITH MySQL
+function selectEditData() {
+    // Get unique ID from edit button that was clicked
     let idStr =  this.id;
     let strArr = idStr.split('_');
     let idNum = Number(strArr[1]);
 
-    xhr.onload = function(){
+    // create unique key signature
+    let rowId = "row_" + idNum;
+
+    let rowEle = document.getElementById(rowId);
+
+    let editTableBody = document.getElementById('editTableBody');
+    
+    //append new row element to edit table body with unique ID
+    let newRow = document.createElement("tr");
+    newRow.id = "editRow";
+    editTableBody.appendChild(newRow);
+
+    // target the new row just added; we need to insert five input fields
+    newRow = document.getElementById("editRow");
+    for (let i=0; i <5; i++) {
+        let td = document.createElement("td");
+        let tempStr = "<input type='text' name=" + i + "id=" + i + 'value=' + "required />";
+        td.innerHTML = tempStr;
+        newRow.appendChild(td);
+    }
+    
+    // create save button and append to row
+    let btnEditSave = document.createElement("td");
+    tempStr = "<input type='button' class='editSave' value='Save' id=" + 'btnEditSave/>';
+    btnEditSave.innerHTML = tempStr;
+    newRow.appendChild(btnEditSave);
+
+    let editDataObj = queryEditData(idNum);
+    console.log(editDataObj);
+   
+
+
+}
+
+function queryEditData(id) {
+    let xhr = new XMLHttpRequest();
+    let url= '/edit';
+    xhr.timeout = 5000;
+
+    xhr.onload = function (){
+        return xhr.response;
 
     }
 
-    // Parameterize DELETE request
-    xhr.open("GET", url, true);
+    // Parameterize GET request
+    xhr.open('POST', url, true);
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-    // Send DELETE request
-    xhr.send(idNum);
+    
+    // Send GET request
+    xhr.send("id="+id);
 
     // Callback on timeout
     xhr.ontimeout = function(){
-        console.log("XMLHttpRequest EDIT Timeout");
+        console.log("XMLHttpRequest Timeout");
     }
 
     // Callback on error
     xhr.onerror = function() {
-        console.log("EDIT: XMLHttpRequest error");
-    }
+        console.log("ONERROR: XMLHttpReset error")
+    };
 }
-
 
 
 // Call postData() when "Add" HTML button pressed
@@ -204,5 +239,5 @@ for (let i=0; i < deleteBtnsCollect.length; i++) {
 editBtnsCollect = document.getElementsByClassName("edit");
 
 for (let i=0; i < editBtnsCollect.length; i++) {
-    editBtnsCollect[i].addEventListener("click", editData);
+    let cell = editBtnsCollect[i].addEventListener("click", selectEditData);
 }
