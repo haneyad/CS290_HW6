@@ -5,11 +5,18 @@ var express = require('express');
 var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var cors = require('cors');
-var fetch = require('fetch');
+
+var multer = require('multer');
+var upload = multer();
+
 var bodyParser = require('body-parser');
 const { equal } = require('assert');
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true}));
+app.use(upload.array());
+app.use(express.static('public'));
+
 app.use(cors());
 app.options('*', cors());
 
@@ -52,7 +59,7 @@ app.get('/',function(req,res,next){
 // Sends new row data to SQL
 app.post('/', function(req,res){
   var context = {};
-  
+
   // Extract the values of the query from the req.body
   var inputList = [];
   for (let q in req.body) {
@@ -86,16 +93,15 @@ app.post('/', function(req,res){
       console.log(err);
       return;
     };
-  });
     console.log("ADD VIA TABLE INSERT SUCCESS");
+    console.log(inputList);
+    res.end();
+  });
 });
 
 
-app.delete('/', function(req,res){
-
-})
-
 // RESETS Database 
+//
 app.get('/reset-table',function(req,res,next){
   var context = {};
   pool.query("DROP TABLE IF EXISTS workouts", function(err){ //replace your connection pool with the your variable containing the connection pool
@@ -118,7 +124,9 @@ app.get('/reset-table',function(req,res,next){
   });
 });
 
+
 // URL for populating table with TEST INSERTS
+//
 app.get('/insert',function(req,res,next){
   var context = {};
   pool.query("INSERT INTO workouts (name, reps, weight, date, lbs) VALUES ('billy', 2, 50, '2021-05-04', 1)", function(err, result){
@@ -134,57 +142,64 @@ app.get('/insert',function(req,res,next){
   });
 });
 
-app.get('/select', function(req,res,next){
+
+// SELECTS LAST ROW from Mysql after INSERT via POST request
+//
+app.get('/selectOnAdd', function(req,res,next){
   var context = {};
-  pool.query('SELECT * FROM workouts', function(err, rows, fields){
+  pool.query('SELECT * FROM workouts ORDER BY id DESC LIMIT 1', function(err, rows, fields){
     if(err){
       next(err);
       res.render('error')
       console.log("ERROR: SELECT");
       return;
     }
-    context.results = JSON.stringify(rows);
-    res.json(context);
-    console.log("SELECT: SUCCESS");
+    res.json(rows);
+    console.log("SELECT: SUCCESS")
   });
 });
 
-/*app.post('/', function(req,res){
-  let urlParams = [];
-  for (let p in req.query){
-    urlParams.push({'parameter':p, 'value':req.query[p]})
-  }
 
-  let urlData = {};
-  urlData.urlList = urlParams;
+// DELETES MySql Entry
+//
+app.post('/delete', function(req, res){
+  console.log("REQUEST BODY: ", typeof(req.body));
+  // Request body is application/x-www-form-urlencoded encoded
+  // Results in key-value pairs
+  let idKey = req.body['id'];
+  queryStr = "DELETE FROM workouts WHERE id=" + idKey;
 
-  let bodyParams = [];
-  for (let q in req.body){
-    bodyParams.push({'parameter':q, 'value':req.body[q]})
-  }
-  console.log(bodyParams);
-  console.log(req.body);
-  let bodyData = {};
-  bodyData.bodyList = bodyParams;
+  pool.query(queryStr, function(err) {
+    if(err){
+      console.log("App.Post DELETE error");
+      res.render('error');
+      return
+    }
+    res.end();
+    console.log("DELETE SUCCESS");
+  })
+});
 
-  res.render('index-post', {
-    urlData : urlData,
-    bodyData: bodyData
+
+// EDIT page for updating table entry
+//
+app.post('/edit', function(req,res,next){
+  var context = {};
+  let idKey = req.body['id'];
+  pool.query('SELECT * FROM workouts WHERE id=' + idKey, function(err, rows, fields){
+    if(err){
+      next(err);
+      res.render('error')
+      console.log("ERROR: SELECT");
+      return;
+    }
+    res.json(rows);
+    console.log("SELECT: SUCCESS")
   });
 });
-*/
-/*app.get('/', function(req,res){
-	let params = [];
-  for (let p in req.query){
-    params.push({'parameter':p, 'value':req.query[p]});
-  }
-  
-  let data = {};
-  data.dataList = params;
-  res.render('index-get', data);
-});
-*/
 
+
+// BOILERPLATE FOR STATUS CODES AND OPENING PORT
 
 app.use(function(req,res){
   res.status(404);

@@ -1,8 +1,9 @@
 <H1>Workout Tracker</H1>
+<H2>Fuck OSU for not recognizing Memorial Day</H2>
 <div>
     Enter Das Workout Data:
 </div>
-<form id="addEntry" method="post">
+<form id="addEntryForm" method="post">
     <table id="inputTable">
         <thead>
             <tr>
@@ -28,10 +29,10 @@
                     <input type="date" name="date" required/>
                 </td>
                 <td>
-                    <input type="text" name="unit" required/>
+                    <input type="text" name="lbs" required/>
                 </td>
                 <td>
-                    <input type="submit" id="submit" value="Insert">
+                    <button type="button" id="submit">Add</button>
                 </td>
             </tr>
         </tbody>
@@ -53,14 +54,36 @@
     </thead>
     <tbody id='tableBody'>
         {{#each dataList}}
-        <tr>
-            <td>{{this.name}}</td>
-            <td>{{this.reps}}</td>
-            <td>{{this.weight}}</td>
-            <td>{{this.date}}</td>
-            <td>{{this.lbs}}</td>
+        <tr id='row_{{this.id}}'>
+            <td id='name_{{this.id}}'>{{this.name}}</td>
+            <td id='reps_{{this.id}}'>{{this.reps}}</td>
+            <td id='weight_{{this.id}}'>{{this.weight}}</td>
+            <td id='date_{{this.id}}'>{{this.date}}</td>
+            <td id='lbs_{{this.id}}'>{{this.lbs}}</td>
+            <td>
+                <button type="button" class="edit" id='btnEdit_{{this.id}}'>Edit</button>
+            </td>
+            <td>
+                <button type="button" class="delete" id='btnDelete_{{this.id}}'>Delete</button>
+            </td>
         </tr>
         {{/each}}
+    </tbody>
+</table>
+<br>
+<h3>Edit Values</h3>
+<table id="editTable">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Reps</th>
+            <th>Weight</th>
+            <th>Date</th>
+            <th>Unit</th>
+        </tr>
+    </thead>
+    <tbody id='editTableBody'>
+
     </tbody>
 </table>
 <br>
